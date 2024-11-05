@@ -1,4 +1,4 @@
-
+// utils/sendEmail.js
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Function to send an email
+
 export const sendEmail = async (to, subject, text) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,

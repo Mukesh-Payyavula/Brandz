@@ -25,9 +25,11 @@ import OrderListScreen from './screens/OrderListScreen';
 import CategoryListScreen from './screens/CategoryListScreen'; 
 import WishlistScreen from './screens/WishlistScreen'; 
 import ForgotPasswordPage from './screens/ForgotPasswordScreen'; 
+import ResetPasswordScreen from './screens/ResetPasswordScreen';
 import Categories from './components/Categories/Categories'; 
 import CategoryDetail from './components/CategoryDetail'; 
 import CategoryScreen from './screens/CategoryScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
 const App = () => {
   return (
@@ -42,7 +44,8 @@ const App = () => {
             <Route path="/wishlist" element={<WishlistScreen />} />
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/register" element={<RegisterScreen />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+            <Route path="/api/users/reset-password/:token" element={<ResetPasswordScreen />} />
             <Route path="/profile" element={<ProtectedRoute />}>
               <Route path="/profile" element={<ProfileScreen />} />
             </Route>

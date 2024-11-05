@@ -1,10 +1,11 @@
-
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
-import generateToken from "../utils/generateToken.js";
-import { generateOtp } from "../utils/generateOtp.js";
-import { sendEmail } from "../utils/sendEmail.js"; 
-import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import crypto from "crypto"; // For generating secure tokens
+import { sendEmail } from "../utils/sendEmail.js"; // Email sending utility
+import generateToken from "../utils/generateToken.js"; // Token generation utility
+import { generateOtp } from "../utils/generateOtp.js"; // OTP generation utility
+import nodemailer from "nodemailer"; // Optional: For email sending (if needed)
 
 // @Desc Auth user & get token
 // @Route /api/users/login
@@ -48,6 +49,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({ name, email, password, otp });
 
   try {
+    // Send OTP to user's email
     await sendEmail(email, 'Your OTP Code', `Your OTP code is ${otp}`);
     res.status(200).json({ success: true, message: "OTP sent to email", userId: user._id });
   } catch (error) {
@@ -101,22 +103,27 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   await user.save();
 
+  const resetUrl = `http://localhost:3000/api/users/reset-password/${resetToken}`;
+
   try {
-    await sendEmail(email, 'Password Reset', `You are receiving this email because you (or someone else) have requested the reset of the password for your account. Please click on the following link, or paste this into your browser to complete the process: http://localhost:5000/reset-password/${resetToken}`);
-    res.status(200).json({ success: true, message: "Email sent" });
+    // Send the password reset email
+    await sendEmail(email, 'Password Reset', `You are receiving this email because you (or someone else) have requested the reset of the password for your account. Please click on the following link, or paste this into your browser to complete the process: ${resetUrl}`);
+    res.status(200).json({ success: true, message: "Password reset email sent" });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error sending email" });
   }
 });
 
 // @Desc Reset password
-// @Route /api/users/reset-password
+// @Route /api/users/reset-password/:token
 // @Method POST
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { token, newPassword } = req.body;
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
   const user = await User.findOne({
     resetPasswordToken: token,
-    resetPasswordExpires: { $gt: Date.now() },
+    resetPasswordExpires: { $gt: Date.now() }, // Token must be valid (not expired)
   });
 
   if (!user) {
@@ -124,7 +131,11 @@ export const resetPassword = asyncHandler(async (req, res) => {
     throw new Error("Invalid or expired token");
   }
 
-  user.password = newPassword;
+  // Hash and save the new password
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPassword, salt);
+
+  // Clear the reset token and expiration
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
 
@@ -194,7 +205,7 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
   });
 });
 
-// @Desc Get users
+// @Desc Get all users
 // @Route /api/users
 // @Method GET
 export const getUsers = asyncHandler(async (req, res) => {
@@ -231,7 +242,7 @@ export const getUserById = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, user });
 });
 
-// @Desc Update user
+// @Desc Update user by ID
 // @Route /api/users/:id
 // @Method PUT
 export const updateUser = asyncHandler(async (req, res) => {

@@ -1,4 +1,3 @@
-// Import dependencies
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -6,10 +5,7 @@ import path from "path";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddleware.js";
-import nodemailer from "nodemailer";
-import { sendEmail } from './utils/sendEmail.js';  // Assuming sendEmail is in utils/sendEmail.js
 
-// Import Routes
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
@@ -24,11 +20,9 @@ dotenv.config();
 // Connect Database
 connectDB();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Morgan logging for development
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
@@ -110,26 +104,7 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Example: Route to Send an Email
-app.post('/api/send-email', async (req, res) => {
-  const { to, subject, text } = req.body;
-
-  // Input validation
-  if (!to || !subject || !text) {
-    return res.status(400).json({ message: 'Please provide "to", "subject", and "text" fields.' });
-  }
-
-  try {
-    await sendEmail(to, subject, text);  // Use the sendEmail function
-    res.status(200).json({ message: 'Email sent successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error sending email', error: error.message });
-  }
-});
-
-
 // Server Setup
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server is running on Port ${PORT}`));
-
