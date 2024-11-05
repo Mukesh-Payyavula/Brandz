@@ -1,0 +1,30 @@
+.category-card {
+  border: none;
+  background: transparent;
+}
+
+.mb-3{
+display: flex;
+justify-content: center;
+}
+
+.card-title{
+  text-decoration: none;
+}
+
+.category-card .card-img-top {
+  width: 200px;
+  height: 200px;
+  border: 1px solid rgb(68, 162, 185);
+  border-radius: 50%; 
+  transition: transform 0.3s;
+}
+
+.category-card:hover .card-img-top {
+  border: 3px solid darkblue;
+  transform: scale(1.05);
+}
+
+.button {
+  background-color: navy;
+}

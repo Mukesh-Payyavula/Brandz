@@ -1,0 +1,27 @@
+.scrolling-banner {
+    overflow: hidden;
+    white-space: nowrap;
+    background: #061e36; /* Adjust background color */
+    padding: 20px 0;
+    border: 1px solid #ccc; 
+  }
+  
+  .scrolling-text {
+    display: inline-block;
+    animation: scroll 40s linear infinite;
+    color: gold;
+  }
+  
+  .banner-message {
+    margin-right: 100px;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
