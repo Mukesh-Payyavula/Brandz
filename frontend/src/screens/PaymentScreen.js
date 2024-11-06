@@ -14,6 +14,7 @@ const PaymentScreen = () => {
   const cart = useSelector((state) => state.cart);
   const { shippingAddress } = cart;
 
+  // Redirect if there's no shipping address
   if (!shippingAddress) navigate("/shipping");
 
   const handlePaymentMethod = (e) => {

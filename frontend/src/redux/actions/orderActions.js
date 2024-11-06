@@ -1,5 +1,5 @@
-import * as actions from "../constants/orderConstants";
 import axios from "axios";
+import * as actions from "../constants/orderConstants";
 import { logout } from "./userActions";
 
 // Create Order Action
@@ -18,7 +18,6 @@ export const createOrder = (dataOrder) => async (dispatch, getState) => {
       },
     };
 
-    // Post order data to the server
     const { data } = await axios.post("/api/orders", dataOrder, config);
 
     dispatch({ type: actions.ORDER_CREATE_SUCCESS, payload: data.order });
@@ -205,6 +204,7 @@ export const listOrders = () => async (dispatch, getState) => {
     };
 
     const { data } = await axios.get(`/api/orders/`, config);
+
     dispatch({ type: actions.ORDER_LIST_SUCCESS, payload: data.orders });
   } catch (error) {
     const message =
@@ -218,5 +218,19 @@ export const listOrders = () => async (dispatch, getState) => {
       type: actions.ORDER_LIST_FAILED,
       payload: message,
     });
+  }
+};
+
+// Order Create Action (Simplified version from initial code)
+export const createOrderSimplified = (order) => async (dispatch) => {
+  try {
+    // Your API request to place an order
+    const { data } = await axios.post("/api/orders", order); // Adjust as necessary
+    dispatch({ type: actions.ORDER_CREATE_SUCCESS, payload: data });
+  } catch (error) {
+    const message = error.response && error.response.data.message
+      ? error.response.data.message
+      : error.message;
+    dispatch({ type: actions.ORDER_CREATE_FAILED, payload: message });
   }
 };

@@ -1,37 +1,26 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect } from "react";
 import { Row, Col, ListGroup, Image, Card, Button } from "react-bootstrap";
-import Loading from "../components/Loading";
-import Message from "../components/Message";
+import { Link, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import Message from "../components/Message";
 import CheckoutSteps from "../components/CheckoutSteps";
-import {
-  getOrderDetails,
-  payOrder,
-  deliverOrder,
-} from "../redux/actions/orderActions";
+import { getOrderDetails, payOrder, deliverOrder } from "../redux/actions/orderActions";
+import { clearCart } from "../redux/actions/cartActions"; // Import clearCart action
 
 const OrderScreen = () => {
   let params = useParams();
-  let navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { order, loading, error } = useSelector((state) => state.orderDetails);
-
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  const { loading: loadingPay, success: successPay } = useSelector(
-    (state) => state.orderPay
+  const { success: successPay } = useSelector((state) => state.orderPay);
+  const { loading: loadingDeliverd, error: errorDeliverd, success: successDeliverd } = useSelector(
+    (state) => state.orderDeliver
   );
 
-  const {
-    loading: loadingDeliverd,
-    error: errorDeliverd,
-    success: successDeliverd,
-  } = useSelector((state) => state.orderDeliver);
-
+  // Calculate prices once the order is fetched
   if (!loading) {
     const addDecimals = (num) => {
       return (Math.round(num * 100) / 100).toFixed(2);
@@ -43,14 +32,14 @@ const OrderScreen = () => {
   }
 
   useEffect(() => {
-    if (!order || successPay) {
+    if (!order || successPay || successDeliverd) {
       dispatch(getOrderDetails(params.id));
     }
-  }, [dispatch, successPay, params.id, successDeliverd, order]);
-
-  const successPaymentHandler = (paymentResult) => {
-    dispatch(payOrder(params.id, paymentResult));
-  };
+    // Clear cart after successful payment
+    if (order && order.isPaid) {
+      dispatch(clearCart()); // Clear the cart when the order is paid
+    }
+  }, [dispatch, successPay, successDeliverd, params.id, order]);
 
   const deliverHandler = () => {
     dispatch(deliverOrder(params.id));
@@ -60,7 +49,7 @@ const OrderScreen = () => {
     <>
       <CheckoutSteps step1 step2 step3 step4 />
       {loading ? (
-        <Loading />
+        <Message variant="info">Loading order details...</Message> // Show message while loading
       ) : error ? (
         <Message variant="danger">{error}</Message>
       ) : (
@@ -76,16 +65,12 @@ const OrderScreen = () => {
                     {order.user.name}
                     <br />
                     <strong>Email: </strong>
-                    <a href={`mailto:${order.user.email}`}>
-                      {order.user.email}
-                    </a>
+                    <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
                   </p>
                   <strong>Address:</strong>
                   <p>
-                    {order.shippingAddress.address},{" "}
-                    {order.shippingAddress.city}{" "}
-                    {order.shippingAddress.postalCode},{" "}
-                    {order.shippingAddress.country}
+                    {order.shippingAddress.address}, {order.shippingAddress.city}{" "}
+                    {order.shippingAddress.postalCode}, {order.shippingAddress.country}
                   </p>
                   {order.isDelivered ? (
                     <Message variant="success">
@@ -98,13 +83,17 @@ const OrderScreen = () => {
                 <ListGroup.Item>
                   <h4>Payment Method</h4>
                   <p>
-                    <strong>Method : </strong>
-                    {order.paymentMethod}
+                    <strong>Method: </strong> {order.paymentMethod}
                   </p>
                   {order.isPaid ? (
                     <Message variant="success">Paid on {order.paidAt}</Message>
                   ) : (
                     <Message variant="danger">Not Paid</Message>
+                  )}
+                  {!order.isPaid && order.paymentMethod === "COD" && (
+                    <Message variant="info">
+                      Payment will be collected upon delivery.
+                    </Message>
                   )}
                 </ListGroup.Item>
                 <ListGroup.Item>
@@ -117,21 +106,13 @@ const OrderScreen = () => {
                         <ListGroup.Item key={index}>
                           <Row>
                             <Col md={1}>
-                              <Image
-                                src={item.image}
-                                alt={item.name}
-                                fluid
-                                rounded
-                              />
+                              <Image src={item.image} alt={item.name} fluid rounded />
                             </Col>
                             <Col>
-                              <Link to={`/product/${item.product}`}>
-                                {item.name}
-                              </Link>
+                              <Link to={`/product/${item.product}`}>{item.name}</Link>
                             </Col>
                             <Col md={4}>
-                              {item.qty} x ₹ {item.price} = ₹
-                              {item.qty * item.price}
+                              {item.qty} x ₹ {item.price} = ₹ {item.qty * item.price}
                             </Col>
                           </Row>
                         </ListGroup.Item>
@@ -141,6 +122,7 @@ const OrderScreen = () => {
                 </ListGroup.Item>
               </ListGroup>
             </Col>
+
             <Col md={4}>
               <Card>
                 <ListGroup variant="flush">
@@ -170,45 +152,29 @@ const OrderScreen = () => {
                       <Col>Total</Col>
                       <Col>₹ {order.totalPrice}</Col>
                     </Row>
-                    <ListGroup.Item>
-                      {!order.isPaid && order.paymentMethod === 'COD' && (
-                        <Message variant="info">
-                          Payment will be collected upon delivery.
-                        </Message>
-                      )}
-                      {/* PayPal button section commented out
-                      {!order.isPaid && order.paymentMethod === 'PayPal' && (
-                        <>
-                          {loadingPay && <Loading />}
-                          {!sdkReady ? (
-                            <Loading />
-                          ) : (
-                            <PayPalButton
-                              amount={order.totalPrice}
-                              onSuccess={successPaymentHandler}
-                            />
-                          )}
-                        </>
-                      )} */}
-                      {loadingDeliverd ? (
-                        <Loading />
-                      ) : (
-                        userInfo.isAdmin &&
-                        order.isPaid &&
-                        !order.isDelivered && (
-                          <Button
-                            onClick={deliverHandler}
-                            className="w-100"
-                            variant="primary"
-                          >
-                            Mark as delivered
-                          </Button>
-                        )
-                      )}
-                      {errorDeliverd && (
-                        <Message variant="danger">{errorDeliverd}</Message>
-                      )}
-                    </ListGroup.Item>
+                  </ListGroup.Item>
+                  <ListGroup.Item>
+                    {!order.isPaid && order.paymentMethod === 'COD' && (
+                      <Message variant="info">
+                        Payment will be collected upon delivery.
+                      </Message>
+                    )}
+                    {loadingDeliverd ? (
+                      <Message variant="info">Processing delivery...</Message> // Display custom message for delivery
+                    ) : (
+                      userInfo.isAdmin &&
+                      order.isPaid &&
+                      !order.isDelivered && (
+                        <Button
+                          onClick={deliverHandler}
+                          className="w-100"
+                          variant="primary"
+                        >
+                          Mark as delivered
+                        </Button>
+                      )
+                    )}
+                    {errorDeliverd && <Message variant="danger">{errorDeliverd}</Message>}
                   </ListGroup.Item>
                 </ListGroup>
               </Card>

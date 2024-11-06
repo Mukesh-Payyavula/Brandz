@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const OrderSchema = mongoose.Schema(
+const orderSchema = mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "User",
+      ref: 'User',
     },
 
     orderItems: [
@@ -17,7 +17,7 @@ const OrderSchema = mongoose.Schema(
         product: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          ref: "Product",
+          ref: 'Product',
         },
       },
     ],
@@ -41,22 +41,28 @@ const OrderSchema = mongoose.Schema(
       email_address: { type: String },
     },
 
-    taxPrice: {
+    itemsPrice: {
       type: Number,
       required: true,
-      default: 0.0,
+      default: 0.0, // default to 0 if not provided
     },
 
     shippingPrice: {
       type: Number,
       required: true,
-      default: 0.0,
+      default: 0.0, // default to 0 if not provided
+    },
+
+    taxPrice: {
+      type: Number,
+      required: true,
+      default: 0.0, // default to 0 if not provided
     },
 
     totalPrice: {
       type: Number,
       required: true,
-      default: 0.0,
+      default: 0.0, // default to 0 if not provided
     },
 
     isPaid: {
@@ -80,10 +86,10 @@ const OrderSchema = mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 );
 
-const Order = mongoose.model("Order", OrderSchema);
+const Order = mongoose.model('Order', orderSchema);
 
 export default Order;

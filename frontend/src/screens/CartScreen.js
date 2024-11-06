@@ -1,3 +1,5 @@
+// In CartScreen.js
+
 import React from "react";
 import {
   ListGroup,
@@ -14,7 +16,7 @@ import Message from "../components/Message";
 import Meta from "../components/Meta";
 import { addToCart, removeFromCart } from "../redux/actions/cartActions";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; 
+import "react-toastify/dist/ReactToastify.css";
 
 const CartScreen = () => {
   let navigate = useNavigate();
@@ -106,7 +108,7 @@ const CartScreen = () => {
                       ) Items
                     </h4>
                     <h5 className="mt-3">
-                      ₹ 
+                      ₹{" "}
                       {cartItems
                         .reduce((acc, item) => acc + item.qty * item.price, 0)
                         .toFixed(2)}

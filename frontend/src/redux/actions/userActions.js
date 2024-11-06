@@ -1,10 +1,5 @@
 import axios from "axios";
-import * as actions from "../constants/userConstants.js";
-import {
-  USER_VERIFY_OTP_REQUEST,
-  USER_VERIFY_OTP_SUCCESS,
-  USER_VERIFY_OTP_FAIL,
-} from "../constants/userConstants";
+import * as actions from "../constants/userConstants";
 
 // Login action
 export const login = (email, password) => async (dispatch) => {
@@ -17,11 +12,7 @@ export const login = (email, password) => async (dispatch) => {
       },
     };
 
-    const { data } = await axios.post(
-      "/api/users/login",
-      { email, password },
-      config
-    );
+    const { data } = await axios.post("/api/users/login", { email, password }, config);
 
     dispatch({ type: actions.USER_LOGIN_SUCCESS, payload: data.user });
     localStorage.setItem("userInfo", JSON.stringify(data.user));
@@ -76,14 +67,32 @@ export const register = (name, email, password) => async (dispatch) => {
 // Verify OTP action
 export const verifyOtp = (data) => async (dispatch) => {
   try {
-    dispatch({ type: USER_VERIFY_OTP_REQUEST });
+    dispatch({ type: actions.USER_VERIFY_OTP_REQUEST });
 
     const response = await axios.post("/api/users/verify-otp", data);
 
-    dispatch({ type: USER_VERIFY_OTP_SUCCESS, payload: response.data });
+    dispatch({ type: actions.USER_VERIFY_OTP_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({
-      type: USER_VERIFY_OTP_FAIL,
+      type: actions.USER_VERIFY_OTP_FAIL,
+      payload: error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message,
+    });
+  }
+};
+
+// Send OTP action
+export const sendOtp = (email) => async (dispatch) => {
+  try {
+    dispatch({ type: actions.USER_SEND_OTP_REQUEST });
+
+    const response = await axios.post("/api/users/send-otp", { email });
+
+    dispatch({ type: actions.USER_SEND_OTP_SUCCESS, payload: response.data });
+  } catch (error) {
+    dispatch({
+      type: actions.USER_SEND_OTP_FAIL,
       payload: error.response && error.response.data.message
         ? error.response.data.message
         : error.message,

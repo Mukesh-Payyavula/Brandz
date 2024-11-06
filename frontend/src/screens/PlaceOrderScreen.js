@@ -7,45 +7,57 @@ import CheckoutSteps from "../components/CheckoutSteps";
 import { createOrder } from "../redux/actions/orderActions";
 
 const PlaceOrderScreen = () => {
-  let navigate = useNavigate();
   const dispatch = useDispatch();
-  const cart = useSelector((state) => state.cart);
+  let navigate = useNavigate();
 
+  const cart = useSelector((state) => state.cart);
   const { order, success, error } = useSelector((state) => state.orderCreate);
 
+  const { shippingAddress, paymentMethod } = cart;
+
+  // Redirect to shipping page if there is no shipping address
+  useEffect(() => {
+    if (!shippingAddress) {
+      navigate("/shipping");
+    }
+  }, [shippingAddress, navigate]);
+
+  // Add decimals to the numbers (for item prices, tax, and shipping)
   const addDecimals = (num) => {
     return (Math.round(num * 100) / 100).toFixed(2);
   };
 
+  // Calculate prices
   cart.itemsPrice = addDecimals(
     cart.cartItems.reduce((acc, item) => acc + item.price * item.qty, 0)
   );
 
   cart.shippingPrice = cart.itemsPrice > 100 ? 0 : 100;
-
   cart.taxPrice = addDecimals(Number((0.15 * cart.itemsPrice).toFixed(2)));
-
   cart.totalPrice = (
     Number(cart.itemsPrice) +
     Number(cart.shippingPrice) +
     Number(cart.taxPrice)
   ).toFixed(2);
 
+  // Redirect to the order screen if the order is successfully created
   useEffect(() => {
-    if (success) navigate(`/order/${order._id}`);
-  }, [dispatch, success, order?._id, navigate]);
+    if (success) {
+      navigate(`/order/${order._id}`);
+    }
+  }, [success, order, navigate]);
 
   const placeOrderHandler = () => {
-    dispatch(
-      createOrder({
-        orderItems: cart.cartItems,
-        shippingAddress: cart.shippingAddress,
-        paymentMethod: cart.paymentMethod,
-        taxPrice: cart.taxPrice,
-        shippingPrice: cart.shippingPrice,
-        totalPrice: cart.totalPrice,
-      })
-    );
+    // If the payment method is COD, place the order directly
+    const orderData = {
+      orderItems: cart.cartItems,
+      shippingAddress,
+      paymentMethod,
+      taxPrice: cart.taxPrice,
+      shippingPrice: cart.shippingPrice,
+      totalPrice: cart.totalPrice,
+    };
+    dispatch(createOrder(orderData));
   };
 
   return (
@@ -63,15 +75,13 @@ const PlaceOrderScreen = () => {
               <h4>Shipping</h4>
               <strong>Address:</strong>
               <p>
-                {cart.shippingAddress.address}, {cart.shippingAddress.city}{" "}
-                {cart.shippingAddress.postalCode},{" "}
-                {cart.shippingAddress.country}
+                {shippingAddress.address}, {shippingAddress.city}{" "}
+                {shippingAddress.postalCode}, {shippingAddress.country}
               </p>
             </ListGroup.Item>
             <ListGroup.Item>
               <h4>Payment Method</h4>
-              <strong>Method : </strong>
-              {cart.paymentMethod}
+              <strong>Method:</strong> {paymentMethod === "COD" ? "Cash On Delivery" : paymentMethod}
             </ListGroup.Item>
             <ListGroup.Item>
               <h4>Order Items</h4>
@@ -83,17 +93,10 @@ const PlaceOrderScreen = () => {
                     <ListGroup.Item key={index}>
                       <Row>
                         <Col md={1}>
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fluid
-                            rounded
-                          />
+                          <Image src={item.image} alt={item.name} fluid rounded />
                         </Col>
                         <Col>
-                          <Link to={`/product/${item.product}`}>
-                            {item.name}
-                          </Link>
+                          <Link to={`/product/${item.product}`}>{item.name}</Link>
                         </Col>
                         <Col md={4}>
                           {item.qty} x ₹ {item.price} = ₹ {item.qty * item.price}
